@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RNA-seq pipeline — ARES</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e14; --bg2: #0f1520; --bg3: #141c2e; --surface: #1a2438;
+      --border: rgba(99,140,210,0.15); --border2: rgba(99,140,210,0.28);
+      --gold: #c8a96e; --gold2: #e2c98a;
+      --blue: #4a8fd4; --blue2: #6aaee8;
+      --text: #d4dde8; --muted: #6b7d94;
+      --green: #4ecb8d; --amber: #e8a84a; --red: #e05a5a;
+      --tag-bg: rgba(74,143,212,0.12); --tag-text: #6aaee8;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(74,143,212,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(74,143,212,0.03) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      background: rgba(10,14,20,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--blue), var(--gold));
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: #fff;
+    }
+    .nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #fff; }
+    .nav-back { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-decoration: none; }
+    .nav-back:hover { color: var(--blue2); }
+
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 100px 48px 80px; }
+
+    .breadcrumb { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--blue2); }
+
+    .wf-header { margin-bottom: 40px; }
+    .wf-domain {
+      display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px;
+      padding: 3px 8px; border-radius: 3px;
+      background: rgba(78,203,141,0.1); color: var(--green);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+    }
+    .wf-title { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .wf-desc { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 640px; margin-bottom: 24px; }
+
+    .wf-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue2); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border2); }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue2); }
+
+    .meta-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .meta-cell { background: var(--bg2); padding: 16px 20px; }
+    .meta-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .meta-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; }
+
+    h2 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin: 40px 0 16px; }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 24px;
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      color: var(--text); overflow-x: auto; line-height: 1.7;
+    }
+    .comment { color: var(--muted); }
+    .key { color: var(--blue2); }
+    .val { color: var(--gold); }
+    .str { color: var(--green); }
+
+    .param-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .param-table th {
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+      text-align: left; padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .param-table td {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-family: 'DM Mono', monospace; color: var(--text);
+    }
+    .param-table tr:last-child td { border-bottom: none; }
+    .param-table tbody tr:hover td { background: var(--bg3); }
+    .required { color: var(--red); font-size: 10px; }
+    .optional { color: var(--muted); font-size: 10px; }
+
+    .tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border); color: var(--muted); margin: 2px; }
+
+    footer {
+      position: relative; z-index: 1; border-top: 1px solid var(--border);
+      padding: 32px 48px; max-width: 900px; margin: 0 auto;
+      display: flex; justify-content: space-between;
+      font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--blue2); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">A</div>
+    <span class="nav-logo-text">ARES</span>
+  </a>
+  <a href="/" class="nav-back">← Back to catalogue</a>
+</nav>
+
+<div class="page">
+  <div class="breadcrumb"><a href="/">ARES</a> / <a href="/#workflows">Workflows</a> / RNA-seq pipeline</div>
+
+  <div class="wf-header">
+    <span class="wf-domain">Genomics</span>
+    <h1 class="wf-title">RNA-seq pipeline</h1>
+    <p class="wf-desc">Bulk RNA-seq from FASTQ to differential expression using STAR, featureCounts, and DESeq2. Supports single-end and paired-end reads, multiple reference genomes, and multi-group comparisons.</p>
+
+    <div class="wf-actions">
+      <a href="https://github.com/unsw-restech/ares/tree/main/workflows/rna-seq-pipeline" class="btn btn-primary" target="_blank">View on GitHub</a>
+      <a href="https://workflowhub.eu/workflows/ares-rna-seq" class="btn btn-outline" target="_blank">Cite (WorkflowHub DOI)</a>
+      <a href="https://doi.org/10.48546/workflowhub.workflow.xxx" class="btn btn-outline" target="_blank">DOI</a>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-cell">
+        <div class="meta-label">Version</div>
+        <div class="meta-val">v2.1.0</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Engine</div>
+        <div class="meta-val">Nextflow</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Maintainer</div>
+        <div class="meta-val" style="font-size:12px">j.smith@unsw.edu.au</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Compute</div>
+        <div class="meta-val">Katana · Gadi</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Quick start</h2>
+  <pre><span class="comment"># 1. Clone the workflow</span>
+git clone https://github.com/unsw-restech/ares.git
+cd ares/workflows/rna-seq-pipeline
+
+<span class="comment"># 2. Edit parameters</span>
+cp params.example.yml params.yml
+nano params.yml
+
+<span class="comment"># 3. Run on Katana</span>
+nextflow run main.nf \
+  -profile katana \
+  -params-file params.yml</pre>
+
+  <h2>Parameters</h2>
+  <table class="param-table">
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Type</th>
+        <th>Required</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>reads</td>
+        <td>path</td>
+        <td><span class="required">required</span></td>
+        <td>—</td>
+        <td>Path to FASTQ files (glob pattern)</td>
+      </tr>
+      <tr>
+        <td>genome</td>
+        <td>string</td>
+        <td><span class="required">required</span></td>
+        <td>GRCh38</td>
+        <td>Reference genome (GRCh38, GRCm39, mm10)</td>
+      </tr>
+      <tr>
+        <td>strandedness</td>
+        <td>string</td>
+        <td><span class="optional">optional</span></td>
+        <td>auto</td>
+        <td>Library strandedness (auto, forward, reverse, unstranded)</td>
+      </tr>
+      <tr>
+        <td>min_mapped_reads</td>
+        <td>integer</td>
+        <td><span class="optional">optional</span></td>
+        <td>5000000</td>
+        <td>Minimum mapped reads threshold per sample</td>
+      </tr>
+      <tr>
+        <td>outdir</td>
+        <td>path</td>
+        <td><span class="optional">optional</span></td>
+        <td>./results</td>
+        <td>Output directory</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Example params.yml</h2>
+  <pre><span class="key">reads</span>: <span class="str">"/srv/scratch/zXXXXXXX/my-project/fastq/*_R{1,2}.fastq.gz"</span>
+<span class="key">genome</span>: <span class="str">"GRCh38"</span>
+<span class="key">strandedness</span>: <span class="str">"auto"</span>
+<span class="key">outdir</span>: <span class="str">"/srv/scratch/zXXXXXXX/my-project/results"</span></pre>
+
+  <h2>Container</h2>
+  <pre>ghcr.io/unsw-restech/rna-seq:<span class="val">2.1.0</span>
+<span class="comment"># Pulled automatically by Nextflow via Apptainer on Katana</span></pre>
+
+  <h2>Compute profiles</h2>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:32px;">
+    <span class="tag">katana</span>
+    <span class="tag">gadi</span>
+    <span class="tag">local</span>
+    <span class="tag">docker</span>
+    <span class="tag">singularity</span>
+  </div>
+
+  <h2>Cite this workflow</h2>
+  <pre><span class="comment"># BibTeX</span>
+<span class="val">@software</span>{ares_rnaseq_2024,
+  <span class="key">author</span>    = {<span class="str">Smith, J. and UNSW ResTech</span>},
+  <span class="key">title</span>     = {<span class="str">ARES RNA-seq pipeline</span>},
+  <span class="key">version</span>   = {<span class="str">2.1.0</span>},
+  <span class="key">year</span>      = {<span class="str">2024</span>},
+  <span class="key">doi</span>       = {<span class="str">10.48546/workflowhub.workflow.xxx.1</span>},
+  <span class="key">url</span>       = {<span class="str">https://workflowhub.eu/workflows/xxx</span>}
+}</pre>
+</div>
+
+<footer>
+  <span>ARES · UNSW ResTech</span>
+  <span><a href="/">← Back to catalogue</a> · <a href="mailto:restech@unsw.edu.au">restech@unsw.edu.au</a></span>
+</footer>
+
+</body>
+</html>
