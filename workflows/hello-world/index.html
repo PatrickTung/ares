@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello World — ARES</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e14; --bg2: #0f1520; --bg3: #141c2e;
+      --border: rgba(99,140,210,0.15); --border2: rgba(99,140,210,0.28);
+      --gold: #c8a96e; --gold2: #e2c98a;
+      --blue: #4a8fd4; --blue2: #6aaee8;
+      --text: #d4dde8; --muted: #6b7d94;
+      --green: #4ecb8d; --amber: #e8a84a; --red: #e05a5a;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(74,143,212,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,143,212,0.03) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      background: rgba(10,14,20,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--blue), var(--gold));
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: #fff;
+    }
+    .nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #fff; }
+    .nav-back { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-decoration: none; }
+    .nav-back:hover { color: var(--blue2); }
+
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 100px 48px 80px; }
+
+    .breadcrumb { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--blue2); }
+
+    .wf-domain {
+      display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px;
+      padding: 3px 8px; border-radius: 3px;
+      background: rgba(74,143,212,0.12); color: var(--blue2);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+    }
+    .wf-title { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .wf-desc { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 640px; margin-bottom: 32px; }
+
+    /* ── Compute tabs ── */
+    .compute-tabs { display: flex; gap: 0; margin-bottom: 40px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .tab-btn {
+      flex: 1; padding: 14px 20px;
+      font-family: 'DM Mono', monospace; font-size: 12px;
+      background: var(--bg2); color: var(--muted);
+      border: none; border-right: 1px solid var(--border);
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .tab-btn:last-child { border-right: none; }
+    .tab-btn:hover { color: var(--text); background: var(--bg3); }
+    .tab-btn.active { background: var(--bg3); color: var(--blue2); border-bottom: 2px solid var(--blue); }
+    .tab-label { display: block; font-size: 14px; font-weight: 500; color: inherit; margin-bottom: 2px; font-family: 'Syne', sans-serif; }
+    .tab-sub { font-size: 10px; color: var(--muted); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Run button ── */
+    .run-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 28px; border-radius: 6px;
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+      text-decoration: none; transition: all 0.2s;
+      background: var(--blue); color: #fff;
+      margin-bottom: 32px;
+    }
+    .run-btn:hover { background: var(--blue2); transform: translateY(-1px); }
+    .run-btn .arrow { font-size: 18px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border2); }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue2); }
+
+    .meta-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .meta-cell { background: var(--bg2); padding: 16px 20px; }
+    .meta-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .meta-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; }
+
+    h2 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin: 40px 0 16px; padding-top: 8px; border-top: 1px solid var(--border); }
+    h2:first-of-type { border-top: none; margin-top: 0; }
+
+    p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 24px;
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      color: var(--text); overflow-x: auto; line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .comment { color: var(--muted); }
+    .key { color: var(--blue2); }
+    .val { color: var(--gold); }
+
+    .callout {
+      background: rgba(74,143,212,0.07); border: 1px solid rgba(74,143,212,0.2);
+      border-left: 3px solid var(--blue); border-radius: 6px;
+      padding: 16px 20px; margin-bottom: 24px;
+      font-size: 13px; color: var(--text); line-height: 1.7;
+    }
+    .callout.warning {
+      background: rgba(232,168,74,0.07); border-color: rgba(232,168,74,0.2);
+      border-left-color: var(--amber);
+    }
+
+    .step-list { list-style: none; counter-reset: steps; }
+    .step-list li {
+      counter-increment: steps;
+      display: flex; gap: 16px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px; color: var(--text); line-height: 1.6;
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-list li::before {
+      content: counter(steps);
+      min-width: 24px; height: 24px; border-radius: 50%;
+      background: var(--tag-bg, rgba(74,143,212,0.12));
+      color: var(--blue2);
+      font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    .output-box {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 20px 24px; font-family: 'DM Mono', monospace; font-size: 12px;
+      color: var(--green); line-height: 1.8;
+    }
+
+    footer {
+      position: relative; z-index: 1; border-top: 1px solid var(--border);
+      padding: 32px 48px; max-width: 900px; margin: 0 auto;
+      display: flex; justify-content: space-between;
+      font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--blue2); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .page { padding: 90px 20px 60px; }
+      .meta-grid { grid-template-columns: 1fr 1fr; }
+      .compute-tabs { flex-direction: column; }
+      footer { flex-direction: column; gap: 12px; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">A</div>
+    <span class="nav-logo-text">ARES</span>
+  </a>
+  <a href="/" class="nav-back">← Back to catalogue</a>
+</nav>
+
+<div class="page">
+  <div class="breadcrumb"><a href="/">ARES</a> / <a href="/#workflows">Workflows</a> / Hello World</div>
+
+  <span class="wf-domain">Test workflow</span>
+  <h1 class="wf-title">Hello World</h1>
+  <p class="wf-desc">
+    A minimal test workflow to confirm your ARES setup is working end-to-end.
+    Requires no input data, completes in under 5 minutes, and writes a result
+    file to your scratch directory. Run this first before trying any other ARES workflow.
+  </p>
+
+  <div class="meta-grid">
+    <div class="meta-cell">
+      <div class="meta-label">Version</div>
+      <div class="meta-val">v1.0.0</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Runtime</div>
+      <div class="meta-val">Bash · Docker</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Walltime</div>
+      <div class="meta-val">&lt; 5 min</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Input data</div>
+      <div class="meta-val">None needed</div>
+    </div>
+  </div>
+
+  <!-- Compute tabs -->
+  <div class="compute-tabs">
+    <button class="tab-btn active" onclick="showTab('katana', this)">
+      <span class="tab-label">Katana</span>
+      <span class="tab-sub">UNSW HPC · recommended</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('gadi', this)">
+      <span class="tab-label">Gadi</span>
+      <span class="tab-sub">NCI · manual submit</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('local', this)">
+      <span class="tab-label">Local</span>
+      <span class="tab-sub">Docker · any OS</span>
+    </button>
+  </div>
+
+  <!-- ── KATANA TAB ── -->
+  <div class="tab-panel active" id="tab-katana">
+
+    <div class="callout">
+      Clicking the button below opens Katana OnDemand in your browser. You will be prompted
+      to log in with your zID if you are not already. The job script will be pre-loaded —
+      just click <strong>Submit</strong> to run.
+    </div>
+
+    <a href="https://kod.restech.unsw.edu.au/pun/sys/myjobs/workflows/new?workflow_template=ares-hello-world"
+       class="run-btn" target="_blank">
+      <span class="arrow">▶</span> Run on Katana via OOD
+    </a>
+
+    <h2>What happens when you submit</h2>
+    <ol class="step-list">
+      <li>OOD opens the Job Composer with the ARES Hello World script pre-loaded.</li>
+      <li>PBS schedules the job on a Katana compute node (usually starts within seconds for a 1-CPU job).</li>
+      <li>The script prints system info and writes a result file to <code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--blue2)">/srv/scratch/$USER/ares-hello-world/hello_world_result.txt</code></li>
+      <li>Your run is logged to the ARES usage log.</li>
+      <li>Job completes. Check the result file in your scratch directory or via OOD Files.</li>
+    </ol>
+
+    <h2>Expected output</h2>
+    <div class="output-box">
+========================================<br>
+&nbsp; ARES Hello World — Success<br>
+========================================<br>
+Timestamp : Mon Jan 20 14:32:01 AEDT 2025<br>
+User &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : z1234567<br>
+Job ID &nbsp;&nbsp;&nbsp; : 1234567.katana.restech.unsw.edu.au<br>
+Hostname &nbsp; : katana01.restech.unsw.edu.au<br>
+CPUs &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 1<br>
+Memory &nbsp;&nbsp;&nbsp; : 125G<br>
+<br>
+If you can read this, your ARES → Katana<br>
+pipeline is working correctly.<br>
+========================================
+    </div>
+
+    <h2>Prefer to use SSH?</h2>
+    <p>If you'd rather submit via the command line, copy the script from the GitHub repo and submit directly:</p>
+    <pre><span class="comment"># On a Katana login node</span>
+wget https://raw.githubusercontent.com/patricktung-unsw/ares-pages/main/workflows/hello-world/katana/ares_hello_world.pbs
+qsub ares_hello_world.pbs</pre>
+
+  </div>
+
+  <!-- ── GADI TAB ── -->
+  <div class="tab-panel" id="tab-gadi">
+
+    <div class="callout warning">
+      ARES does not currently have automated job submission for Gadi. Download the script below,
+      edit your project code, and submit manually via ARE or SSH.
+      You will need an active NCI account and a valid project allocation.
+    </div>
+
+    <a href="https://are.nci.org.au" class="btn btn-outline" target="_blank" style="margin-bottom:32px;display:inline-flex">
+      Open ARE (NCI) →
+    </a>
+
+    <h2>Steps</h2>
+    <ol class="step-list">
+      <li>Log in to <a href="https://are.nci.org.au" style="color:var(--blue2)">are.nci.org.au</a> with your NCI credentials.</li>
+      <li>Open a Terminal session or use the Job Composer.</li>
+      <li>Download and edit the script — replace <code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--blue2)">YOUR_PROJECT</code> with your NCI project code.</li>
+      <li>Submit with <code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--blue2)">qsub ares_hello_world_gadi.pbs</code></li>
+    </ol>
+
+    <h2>Gadi PBS script</h2>
+    <pre><span class="comment">#!/bin/bash</span>
+<span class="key">#PBS</span> -N ARES_hello_world
+<span class="key">#PBS</span> -l ncpus=1
+<span class="key">#PBS</span> -l mem=1GB
+<span class="key">#PBS</span> -l walltime=00:05:00
+<span class="key">#PBS</span> -l storage=scratch/YOUR_PROJECT
+<span class="key">#PBS</span> -P <span class="val">YOUR_PROJECT</span>
+<span class="key">#PBS</span> -j oe
+
+OUTDIR="/scratch/$PROJECT/$USER/ares-hello-world"
+mkdir -p "$OUTDIR"
+
+cat > "$OUTDIR/hello_world_result.txt" &lt;&lt; EOF
+========================================
+  ARES Hello World — Gadi — Success
+========================================
+Timestamp : $(date)
+User      : $USER
+Job ID    : $PBS_JOBID
+Hostname  : $(hostname)
+EOF
+
+cat "$OUTDIR/hello_world_result.txt"
+echo "Done. Result at: $OUTDIR/hello_world_result.txt"</pre>
+
+  </div>
+
+  <!-- ── LOCAL TAB ── -->
+  <div class="tab-panel" id="tab-local">
+
+    <div class="callout">
+      Local runs use Docker. Install <a href="https://www.docker.com/products/docker-desktop/" style="color:var(--blue2)" target="_blank">Docker Desktop</a>
+      (Windows or Mac) or Docker Engine (Linux) before proceeding. No other dependencies required.
+    </div>
+
+    <h2>Mac / Linux</h2>
+    <pre><span class="comment"># Download and run</span>
+curl -O https://raw.githubusercontent.com/patricktung-unsw/ares-pages/main/workflows/hello-world/local/run_local.sh
+chmod +x run_local.sh
+./run_local.sh
+
+<span class="comment"># Result will be at: ~/ares-hello-world/hello_world_result.txt</span></pre>
+
+    <h2>Windows (PowerShell)</h2>
+    <pre><span class="comment"># Download and run</span>
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/patricktung-unsw/ares-pages/main/workflows/hello-world/local/run_local.ps1" -OutFile "run_local.ps1"
+.\run_local.ps1
+
+<span class="comment"># Result will be at: ~\ares-hello-world\hello_world_result.txt</span></pre>
+
+    <h2>Expected output</h2>
+    <div class="output-box">
+========================================<br>
+&nbsp; ARES Hello World — Success<br>
+========================================<br>
+Timestamp : Mon Jan 20 14:32:01 UTC 2025<br>
+Hostname &nbsp; : 3f8a1b2c9d4e<br>
+OS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : GNU/Linux<br>
+CPUs &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 8<br>
+<br>
+If you can read this, your local ARES<br>
+Docker setup is working correctly.<br>
+========================================
+    </div>
+
+  </div>
+
+  <!-- Shared bottom section -->
+  <h2>Source files</h2>
+  <p>All scripts are in the ARES GitHub repo. Inspect them before running.</p>
+  <a href="https://github.com/patricktung-unsw/ares-pages/tree/main/workflows/hello-world"
+     class="btn btn-outline" target="_blank">View on GitHub →</a>
+
+</div>
+
+<footer>
+  <span>ARES · UNSW ResTech</span>
+  <span><a href="/">← Back to catalogue</a> · <a href="mailto:restech@unsw.edu.au">restech@unsw.edu.au</a></span>
+</footer>
+
+<script>
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

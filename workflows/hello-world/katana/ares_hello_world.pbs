@@ -1,0 +1,78 @@
+#!/bin/bash
+#PBS -N ARES_hello_world
+#PBS -l select=1:ncpus=1:mem=1gb
+#PBS -l walltime=00:05:00
+#PBS -j oe
+#PBS -o /srv/scratch/$USER/ares-hello-world/ares_hello_world.log
+
+# ═══════════════════════════════════════════════════════════════
+#  ARES — Hello World workflow
+#  A minimal test to confirm your ARES + Katana setup is working.
+#
+#  Output goes to: /srv/scratch/$USER/ares-hello-world/
+#  Usage log:      /srv/scratch/ares/usage-log/usage.jsonl
+# ═══════════════════════════════════════════════════════════════
+
+# ── Parameters (edit if needed) ────────────────────────────────
+OUTDIR="/srv/scratch/$USER/ares-hello-world"
+# ───────────────────────────────────────────────────────────────
+
+set -euo pipefail
+
+echo "========================================"
+echo "  ARES Hello World — Katana"
+echo "========================================"
+echo ""
+echo "Timestamp : $(date)"
+echo "User      : $USER"
+echo "Job ID    : $PBS_JOBID"
+echo "Hostname  : $(hostname)"
+echo "Work dir  : $PBS_O_WORKDIR"
+echo ""
+
+# Create output directory
+mkdir -p "$OUTDIR"
+
+# Write result file
+RESULT="$OUTDIR/hello_world_result.txt"
+cat > "$RESULT" << EOF
+========================================
+  ARES Hello World — Success
+========================================
+Timestamp : $(date)
+User      : $USER
+Job ID    : $PBS_JOBID
+Hostname  : $(hostname)
+Node      : $(uname -n)
+OS        : $(uname -o)
+CPUs      : $(nproc)
+Memory    : $(free -h | awk '/^Mem:/ {print $2}')
+
+If you can read this, your ARES → Katana
+pipeline is working correctly.
+========================================
+EOF
+
+echo "Result written to: $RESULT"
+echo ""
+
+# ── Usage logging ───────────────────────────────────────────────
+LOGDIR="/srv/scratch/ares/usage-log"
+LOGFILE="$LOGDIR/usage.jsonl"
+
+if [ -d "$LOGDIR" ]; then
+    ENTRY=$(cat << EOF
+{"workflow":"ares-hello-world","version":"1.0.0","user":"$USER","job_id":"$PBS_JOBID","status":"success","compute":"katana","timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+EOF
+)
+    echo "$ENTRY" >> "$LOGFILE"
+    echo "Usage logged to: $LOGFILE"
+else
+    echo "Warning: usage log directory not found at $LOGDIR — skipping log."
+    echo "(Ask ResTech to create /srv/scratch/ares/usage-log/)"
+fi
+
+echo ""
+echo "========================================"
+echo "  ARES Hello World — Complete"
+echo "========================================"
