@@ -472,8 +472,9 @@
   </a>
   <div class="nav-links">
     <a href="#workflows">Workflows</a>
+    <a href="#test">Test</a>
     <a href="#compute">Compute</a>
-    <a href="https://github.com/unsw-restech/ares" target="_blank">GitHub</a>
+    <a href="https://github.com/PatrickTung/ares" target="_blank">GitHub</a>
     <a href="https://workflowhub.eu/projects/ares" target="_blank">WorkflowHub</a>
     <span class="nav-badge">v0.1-alpha</span>
   </div>
@@ -481,10 +482,10 @@
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-eyebrow">UNSW ResTech ARES · AI & Research Execution Stack</div>
+  <div class="hero-eyebrow">UNSW ResTech · Research Execution Stack</div>
   <h1>Research workflows.<br><span class="accent">Run anywhere.</span></h1>
   <p class="hero-sub">
-    ARES stands for AI & Research Execution Stack and is a curated catalogue of reproducible scientific workflows for UNSW researchers.
+    ARES is a curated catalogue of reproducible scientific workflows for UNSW researchers.
     Find, cite, and run validated pipelines on Katana, Gadi, or your own hardware — with no setup required.
   </p>
   <div class="hero-actions">
@@ -656,7 +657,7 @@
     <div class="step">
       <div class="step-num">03 / RUN</div>
       <div class="step-title">Submit to compute</div>
-      <div class="step-desc">One command to run on Katana or Gadi. Workflows handles job scheduling, retries, and resource allocation automatically.</div>
+      <div class="step-desc">One command to run on Katana or Gadi. Nextflow handles job scheduling, retries, and resource allocation automatically.</div>
     </div>
     <div class="step">
       <div class="step-num">04 / CITE</div>
@@ -706,11 +707,39 @@
   </div>
 </section>
 
+<!-- TEST -->
+<section id="test">
+  <div class="section-header">
+    <span class="section-title">Test</span>
+    <span class="section-mono">Pilot workflows running on Katana via OpenComposer</span>
+  </div>
+  <div class="workflow-grid">
+
+    <a href="workflows/hello-world/" class="workflow-card" data-domain="test">
+      <div class="card-top">
+        <span class="card-domain" style="background:rgba(74,143,212,0.12);color:var(--blue2)">Test</span>
+        <span class="card-version">v1.0.0</span>
+      </div>
+      <div class="card-name">Hello World</div>
+      <div class="card-desc">A minimal test job to confirm your ARES → Katana setup is working. No input data required. Completes in under 5 minutes.</div>
+      <div class="card-compute">
+        <span class="compute-tag">Katana</span>
+        <span class="compute-tag">OpenComposer</span>
+      </div>
+      <div class="card-meta">
+        <span><span class="status-dot"></span> Active</span>
+        <span>restech@unsw.edu.au</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <span>ARES · UNSW ResTech · Sydney, Australia</span>
   <span>
-    <a href="https://github.com/unsw-restech/ares" target="_blank">GitHub</a> ·
+    <a href="https://github.com/PatrickTung/ares" target="_blank">GitHub</a> ·
     <a href="https://workflowhub.eu" target="_blank">WorkflowHub</a> ·
     <a href="mailto:restech@unsw.edu.au">restech@unsw.edu.au</a>
   </span>
