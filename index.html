@@ -241,6 +241,38 @@
     }
     .section-link:hover { text-decoration: underline; }
 
+    /* ── START HERE ── */
+    #start-here { padding-bottom: 56px; }
+    .start-card {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--blue);
+      border-radius: 10px;
+      padding: 24px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .start-card:hover { border-color: var(--border2); border-left-color: var(--blue2); background: var(--bg3); }
+    .start-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px; font-weight: 700; color: #fff;
+      margin-bottom: 6px;
+    }
+    .start-desc { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 620px; }
+    .start-go {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px; color: var(--blue2); white-space: nowrap;
+    }
+    .prelaunch-note {
+      margin-top: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px; color: var(--muted); line-height: 1.7;
+    }
+    .prelaunch-note strong { color: var(--amber); font-weight: 500; }
+    .prelaunch-note code { font-family: inherit; color: var(--text); }
+
     /* ── WORKFLOW GRID ── */
     .workflow-grid {
       display: grid;
@@ -273,6 +305,12 @@
       background: var(--bg3);
     }
     .workflow-card:hover::before { opacity: 1; }
+
+    .workflow-card.planned { opacity: 0.55; cursor: default; }
+    .workflow-card.planned:hover {
+      border-color: var(--border); transform: none; background: var(--bg2);
+    }
+    .workflow-card.planned:hover::before { opacity: 0; }
 
     .card-top {
       display: flex; align-items: flex-start;
@@ -337,6 +375,7 @@
       display: inline-block;
       box-shadow: 0 0 6px var(--green);
     }
+    .status-dot.planned { background: var(--muted); box-shadow: none; }
 
     /* ── FILTER BAR ── */
     .filter-bar {
@@ -466,7 +505,7 @@
 
 <!-- NAV -->
 <nav>
-  <a href="/" class="nav-logo">
+  <a href="./" class="nav-logo">
     <div class="nav-logo-mark">A</div>
     <span class="nav-logo-text">ARES</span>
   </a>
@@ -489,14 +528,14 @@
   </p>
   <div class="hero-actions">
     <a href="#workflows" class="btn btn-primary">Browse workflows</a>
-    <a href="https://github.com/unsw-restech/ares" class="btn btn-outline" target="_blank">View on GitHub</a>
+    <a href="https://github.com/PatrickTung/ares" class="btn btn-outline" target="_blank">View on GitHub</a>
   </div>
 </div>
 
 <!-- STATS -->
 <div class="stats-bar">
   <div class="stat">
-    <span class="stat-num">12</span>
+    <span class="stat-num">4</span>
     <div class="stat-label">Validated workflows</div>
   </div>
   <div class="stat">
@@ -512,6 +551,25 @@
     <div class="stat-label">Citable via WorkflowHub</div>
   </div>
 </div>
+
+<!-- START HERE -->
+<section id="start-here">
+  <div class="section-header">
+    <span class="section-title">Start here</span>
+    <span class="section-mono">New to ARES? Run a test job first</span>
+  </div>
+  <a href="workflows/hello-world/" class="start-card">
+    <div>
+      <div class="start-name">Hello World</div>
+      <div class="start-desc">A minimal test job that confirms your ARES → Katana setup works end to end. No input data required, completes in under 5 minutes.</div>
+    </div>
+    <span class="start-go">Run the test →</span>
+  </a>
+  <p class="prelaunch-note">
+    <strong>Pre-launch:</strong> “Run on Katana” buttons currently open the development OnDemand
+    instance (<code>/pun/dev/</code>) while workflows are being validated.
+  </p>
+</section>
 
 <!-- WORKFLOWS -->
 <section id="workflows">
@@ -598,7 +656,7 @@
       </div>
     </a>
 
-    <a href="#" class="workflow-card" data-domain="imaging">
+    <div class="workflow-card planned" data-domain="imaging">
       <div class="card-top">
         <span class="card-domain imaging">Imaging</span>
         <span class="card-version">v1.1.0</span>
@@ -610,12 +668,12 @@
         <span class="compute-tag">Nextflow</span>
       </div>
       <div class="card-meta">
-        <span><span class="status-dot"></span> Active</span>
+        <span><span class="status-dot planned"></span> Planned</span>
         <span>imaging@unsw.edu.au</span>
       </div>
-    </a>
+    </div>
 
-    <a href="#" class="workflow-card" data-domain="genomics">
+    <div class="workflow-card planned" data-domain="genomics">
       <div class="card-top">
         <span class="card-domain genomics">Genomics</span>
         <span class="card-version">v1.0.0</span>
@@ -627,10 +685,10 @@
         <span class="compute-tag">Nextflow</span>
       </div>
       <div class="card-meta">
-        <span><span class="status-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></span> Beta</span>
+        <span><span class="status-dot planned"></span> Planned</span>
         <span>restech@unsw.edu.au</span>
       </div>
-    </a>
+    </div>
 
   </div>
 </section>
