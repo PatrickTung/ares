@@ -9,6 +9,7 @@ Landing page and workflow catalogue for UNSW ResTech research workflows.
 ```
 ares/
 ├── index.html                        # Landing page (GitHub Pages root)
+├── .nojekyll                         # Empty — disables Jekyll processing
 ├── assets/
 │   └── ares.css                      # Shared styles for workflow detail pages
 └── workflows/
@@ -22,7 +23,9 @@ ares/
     └── climate-downscaling/index.html
 ```
 
-Plain static HTML — no build step, no dependencies. The landing page keeps its styles inline; the four workflow detail pages share `assets/ares.css`.
+Plain static HTML — no build step, no dependencies. The landing page keeps its styles inline; the four workflow detail pages share `assets/ares.css`. The `hello-world` page has its own styles — it's a deliberate variant, not a copy, so don't fold it into the shared sheet.
+
+Keep `.nojekyll` in place. Without it, Pages runs Jekyll and would silently drop any future directory beginning with an underscore.
 
 ## Local preview
 
