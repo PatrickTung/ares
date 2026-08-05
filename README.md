@@ -54,6 +54,8 @@ Opening `index.html` directly over `file://` will not reproduce the real base pa
 4. Add a card to the workflow grid in `index.html`
 5. Push to `main` — GitHub Pages redeploys automatically
 
+If the workflow ships a `local/run_local.ps1`, **keep it ASCII-only**. These files have no BOM, and Windows PowerShell 5.1 reads a BOM-less UTF-8 file as ANSI — an em dash or box-drawing character decodes into a byte PowerShell treats as a string delimiter, and the script fails to parse before it runs a single line. Use `-` and `=` in banners. The `.sh` files are unaffected.
+
 ## Deployment
 
 GitHub Pages is already configured and deploys from the `main` branch. There is no Actions workflow; pushing to `main` publishes.
@@ -65,6 +67,10 @@ GitHub Pages is already configured and deploys from the `main` branch. There is 
 Two catalogue entries — Cellpose and single-cell RNA-seq — are shown as *Planned* and have no detail page yet.
 
 `mnist-classification` needs its OpenComposer form built before the **Run on Katana** button works; until then the page's "Run it without OnDemand" section is the working path (`prepare.sh` + `qsub`).
+
+The UNSW ResTech WorkflowHub project is [472](https://workflowhub.eu/projects/472) and currently holds **0 workflows**, so nothing here has a DOI yet. The site previously linked project 24 (`usegalaxy-eu`, the European Galaxy Team) and advertised DOIs that do not exist; both were corrected on 2026-08-05.
+
+Remaining overclaims in `index.html`, not yet fixed: the hero and "How it works" still describe **Gadi** as a compute target and **Nextflow** as the execution engine, and tell users to "clone the workflow repo and edit the params file". None of that exists yet — there is no `main.nf` or `params.example.yml` in this repo, and `mnist-classification` runs on plain PBS + Apptainer.
 
 ## Planned
 
