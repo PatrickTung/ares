@@ -46,6 +46,7 @@ nav {
 .wf-domain.genomics { background: rgba(78,203,141,0.1); color: var(--green); }
 .wf-domain.structural { background: rgba(200,169,110,0.1); color: var(--gold); }
 .wf-domain.climate { background: rgba(74,143,212,0.12); color: var(--blue2); }
+.wf-domain.imaging { background: rgba(224,90,90,0.1); color: var(--red); }
 .wf-title { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 12px; }
 .wf-desc { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 640px; margin-bottom: 32px; }
 .run-btn {
@@ -95,6 +96,12 @@ h2:first-of-type { border-top: none; padding-top: 0; }
 .param-table tr:last-child td { border-bottom: none; }
 .param-table tbody tr:hover td { background: var(--bg3); }
 code { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--blue2); }
+.code-block {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px 24px; overflow-x: auto;
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); line-height: 1.8;
+}
+.code-block .comment { color: var(--muted); }
 footer {
   position: relative; z-index: 1; border-top: 1px solid var(--border);
   padding: 32px 48px; max-width: 900px; margin: 0 auto;

@@ -1,0 +1,179 @@
+#!/bin/bash
+#PBS -N ARES_mnist_classification
+#PBS -l select=1:ncpus=4:mem=16gb:ngpus=1
+#PBS -l walltime=00:30:00
+#PBS -j oe
+#PBS -o /srv/scratch/$USER/ares-mnist-classification/ares_mnist_classification.log
+
+# ═══════════════════════════════════════════════════════════════
+#  ARES — MNIST image classification
+#  Trains a small CNN on MNIST inside a PyTorch container.
+#
+#  The container is pulled from Docker Hub on first run and cached
+#  in scratch; later runs reuse it. No admin install required.
+#
+#  Run katana/prepare.sh on a login node first — it does the two
+#  network-bound steps (container pull, MNIST download) where the
+#  internet is reliable, so this job can run offline.
+#
+#  Output goes to: /srv/scratch/$USER/ares-mnist-classification/
+#  Usage log:      /srv/scratch/ares/usage-log/usage.jsonl
+# ═══════════════════════════════════════════════════════════════
+
+# ── Parameters (edit if needed) ────────────────────────────────
+OUTDIR="/srv/scratch/$USER/ares-mnist-classification"
+DATADIR="/srv/scratch/$USER/ares-mnist-classification/data"
+CONTAINER_URI="docker://pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime"
+EPOCHS=3
+BATCH_SIZE=128
+LR=0.001
+# ───────────────────────────────────────────────────────────────
+
+set -euo pipefail
+
+WORKFLOW="ares-mnist-classification"
+VERSION="1.0.0"
+STATUS="failed"          # flipped to success at the end; read by the exit trap
+COMPUTE="katana"         # upgraded to katana-gpu if a GPU turns out to be visible
+CACHE_ROOT="/srv/scratch/$USER/.ares"
+SIF="$CACHE_ROOT/containers/pytorch-2.4.0-cuda12.1.sif"
+RAW_BASE="https://raw.githubusercontent.com/PatrickTung/ares/main/workflows/mnist-classification"
+
+echo "========================================"
+echo "  ARES MNIST classification — Katana"
+echo "========================================"
+echo ""
+echo "Timestamp : $(date)"
+echo "User      : $USER"
+echo "Job ID    : ${PBS_JOBID:-<interactive>}"
+echo "Hostname  : $(hostname)"
+echo "Work dir  : ${PBS_O_WORKDIR:-$PWD}"
+echo ""
+
+mkdir -p "$OUTDIR" "$DATADIR" "$CACHE_ROOT/containers" "$CACHE_ROOT/tmp"
+
+# ── Usage logging on exit, success or failure ───────────────────
+log_usage() {
+    local logdir="/srv/scratch/ares/usage-log"
+    local logfile="$logdir/usage.jsonl"
+    if [ -d "$logdir" ]; then
+        echo "{\"workflow\":\"$WORKFLOW\",\"version\":\"$VERSION\",\"user\":\"$USER\",\"job_id\":\"${PBS_JOBID:-none}\",\"status\":\"$STATUS\",\"compute\":\"$COMPUTE\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" >> "$logfile"
+        echo "Usage logged to: $logfile"
+    else
+        echo "Warning: usage log directory not found at $logdir — skipping log."
+        echo "(Ask ResTech to create /srv/scratch/ares/usage-log/)"
+    fi
+}
+trap log_usage EXIT
+
+# ── GPU detection ───────────────────────────────────────────────
+# Decides both the apptainer --nv flag and what we report in the log.
+NV_FLAG=""
+if command -v nvidia-smi > /dev/null 2>&1 && nvidia-smi > /dev/null 2>&1; then
+    NV_FLAG="--nv"
+    COMPUTE="katana-gpu"
+    echo "GPU detected:"
+    nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+else
+    echo "No GPU visible — the job will train on CPU (slower, but it will finish)."
+fi
+echo ""
+
+# ── Container runtime ───────────────────────────────────────────
+# Cache dirs must be set before any pull. The default is $HOME/.apptainer
+# and a multi-gigabyte image will blow a standard Katana home quota.
+export APPTAINER_CACHEDIR="$CACHE_ROOT/cache"
+export APPTAINER_TMPDIR="$CACHE_ROOT/tmp"
+export SINGULARITY_CACHEDIR="$APPTAINER_CACHEDIR"
+export SINGULARITY_TMPDIR="$APPTAINER_TMPDIR"
+mkdir -p "$APPTAINER_CACHEDIR"
+
+if command -v apptainer > /dev/null 2>&1; then
+    RUNTIME="apptainer"
+elif command -v singularity > /dev/null 2>&1; then
+    RUNTIME="singularity"
+else
+    echo "Neither apptainer nor singularity is on PATH — trying module load."
+    module load apptainer 2> /dev/null || module load singularity 2> /dev/null || true
+    if command -v apptainer > /dev/null 2>&1; then
+        RUNTIME="apptainer"
+    elif command -v singularity > /dev/null 2>&1; then
+        RUNTIME="singularity"
+    else
+        echo "ERROR: no container runtime available on this node."
+        echo "Ask ResTech which module provides apptainer or singularity on Katana,"
+        echo "then add a 'module load <name>' line above this block."
+        exit 1
+    fi
+fi
+echo "Container runtime: $RUNTIME ($($RUNTIME --version))"
+
+# ── Container image (idempotent pull) ───────────────────────────
+if [ -f "$SIF" ]; then
+    echo "Using cached image: $SIF"
+else
+    echo "Pulling $CONTAINER_URI"
+    echo "(first run only — this takes a few minutes and needs outbound internet)"
+    # Pull to a .partial name so an interrupted download never leaves a
+    # truncated .sif that later runs would happily try to execute.
+    rm -f "$SIF.partial"
+    if ! "$RUNTIME" pull "$SIF.partial" "$CONTAINER_URI"; then
+        rm -f "$SIF.partial"
+        echo "ERROR: container pull failed."
+        echo "If this node has no outbound internet, run katana/prepare.sh on a"
+        echo "login node first — it pulls the image into $SIF."
+        exit 1
+    fi
+    mv "$SIF.partial" "$SIF"
+    echo "Cached image at: $SIF"
+fi
+echo ""
+
+# ── Training script ─────────────────────────────────────────────
+TRAIN_SCRIPT=""
+for candidate in \
+    "${PBS_O_WORKDIR:-$PWD}/train_mnist.py" \
+    "${PBS_O_WORKDIR:-$PWD}/../src/train_mnist.py" \
+    "${PBS_O_WORKDIR:-$PWD}/src/train_mnist.py" \
+    "$OUTDIR/train_mnist.py"
+do
+    if [ -f "$candidate" ]; then
+        TRAIN_SCRIPT="$candidate"
+        break
+    fi
+done
+
+if [ -z "$TRAIN_SCRIPT" ]; then
+    echo "train_mnist.py not found nearby — fetching it from GitHub."
+    if curl -fsSL "$RAW_BASE/src/train_mnist.py" -o "$OUTDIR/train_mnist.py"; then
+        TRAIN_SCRIPT="$OUTDIR/train_mnist.py"
+    else
+        echo "ERROR: could not find or download train_mnist.py."
+        echo "Put it next to this script, or in ../src/, or download it manually:"
+        echo "  curl -O $RAW_BASE/src/train_mnist.py"
+        exit 1
+    fi
+fi
+echo "Training script: $TRAIN_SCRIPT"
+echo ""
+
+# ── Run ─────────────────────────────────────────────────────────
+echo "----------------------------------------"
+"$RUNTIME" exec $NV_FLAG \
+    -B /srv/scratch:/srv/scratch \
+    "$SIF" \
+    python3 "$TRAIN_SCRIPT" \
+        --data-dir "$DATADIR" \
+        --outdir "$OUTDIR" \
+        --epochs "$EPOCHS" \
+        --batch-size "$BATCH_SIZE" \
+        --lr "$LR"
+echo "----------------------------------------"
+echo ""
+
+STATUS="success"
+echo "Results in: $OUTDIR"
+echo ""
+echo "========================================"
+echo "  ARES MNIST classification — Complete"
+echo "========================================"
